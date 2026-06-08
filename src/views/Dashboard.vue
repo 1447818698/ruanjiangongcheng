@@ -114,10 +114,17 @@ export default {
 
 .stat-card {
   border-radius: 8px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .stat-card >>> .el-card__body {
-  padding: 20px;
+  padding: 24px;
 }
 
 .stat-content {
@@ -126,15 +133,21 @@ export default {
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 28px;
   color: #fff;
   margin-right: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .stat-icon.blue {
@@ -142,11 +155,11 @@ export default {
 }
 
 .stat-icon.green {
-  background: linear-gradient(135deg, #67C23A 0%, #85ce61 100%);
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
 .stat-icon.orange {
-  background: linear-gradient(135deg, #E6A23C 0%, #f5a623 100%);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 .stat-info {
@@ -160,14 +173,20 @@ export default {
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: bold;
   color: #303133;
+  line-height: 1.2;
 }
 
 /* 进度卡片 */
 .progress-card {
   border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.progress-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {

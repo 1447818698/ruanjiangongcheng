@@ -112,36 +112,59 @@ export default {
 }
 
 .sidebar {
-  background-color: #304156;
-  transition: width 0.3s;
+  background-color: #001529;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
   overflow-x: hidden;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar >>> .el-menu {
+  border-right: none;
+}
+
+.sidebar >>> .el-menu-item {
+  height: 50px;
+  line-height: 50px;
+  transition: all 0.3s;
+}
+
+.sidebar >>> .el-menu-item:hover {
+  background-color: rgba(64, 158, 255, 0.1) !important;
+}
+
+.sidebar >>> .el-menu-item.is-active {
+  background-color: #409EFF !important;
+  color: #fff !important;
 }
 
 .logo {
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 20px;
-  background-color: #2b3a4d;
+  justify-content: center;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   color: #fff;
   font-size: 16px;
   font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
 }
 
 .logo-icon {
-  font-size: 20px;
-  margin-right: 10px;
+  font-size: 24px;
+  margin-right: 8px;
 }
 
 .header {
   background-color: #fff;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 24px;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  height: 64px;
+  line-height: 64px;
 }
 
 .header-left {
@@ -152,12 +175,14 @@ export default {
 .collapse-icon {
   font-size: 20px;
   cursor: pointer;
-  margin-right: 15px;
-  color: #606266;
+  margin-right: 20px;
+  color: #515a6e;
+  transition: all 0.3s;
 }
 
 .collapse-icon:hover {
   color: #409EFF;
+  transform: scale(1.1);
 }
 
 .breadcrumb {
@@ -173,6 +198,13 @@ export default {
   display: flex;
   align-items: center;
   cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.user-info:hover {
+  background-color: #f5f7fa;
 }
 
 .username {

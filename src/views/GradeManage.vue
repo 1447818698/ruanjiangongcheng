@@ -15,6 +15,15 @@ export default {
 
 <style scoped>
 .grade-manage {
-  padding: 20px;
+  padding: 0;
+}
+
+.grade-manage >>> .el-card {
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.grade-manage >>> .el-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 </style>
