@@ -3,8 +3,8 @@
     <!-- 左侧导航菜单 -->
     <el-aside :width="isCollapse ? '64px' : '200px'" class="sidebar">
       <div class="logo">
-        <h3 v-if="!isCollapse">学生管理系统</h3>
-        <h3 v-else>SMS</h3>
+        <i class="el-icon-s-grid logo-icon"></i>
+        <h3 v-if="!isCollapse">学生管理</h3>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -17,7 +17,7 @@
       >
         <el-menu-item index="/dashboard">
           <i class="el-icon-s-home"></i>
-          <span slot="title">数据概览</span>
+          <span slot="title">系统首页</span>
         </el-menu-item>
         
         <el-menu-item index="/students">
@@ -25,14 +25,9 @@
           <span slot="title">学生管理</span>
         </el-menu-item>
         
-        <el-menu-item index="/classes">
-          <i class="el-icon-collection"></i>
-          <span slot="title">班级管理</span>
-        </el-menu-item>
-        
         <el-menu-item index="/grades">
           <i class="el-icon-document"></i>
-          <span slot="title">成绩管理</span>
+          <span slot="title">请假审批</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -47,7 +42,7 @@
             @click="toggleCollapse"
           ></i>
           <el-breadcrumb separator="/" class="breadcrumb">
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/dashboard' }">后台管理</el-breadcrumb-item>
             <el-breadcrumb-item>{{ currentTitle }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -126,11 +121,17 @@ export default {
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-left: 20px;
   background-color: #2b3a4d;
   color: #fff;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
+}
+
+.logo-icon {
+  font-size: 20px;
+  margin-right: 10px;
 }
 
 .header {
@@ -140,6 +141,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
 }
 
 .header-left {

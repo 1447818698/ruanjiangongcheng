@@ -1,15 +1,15 @@
 <template>
   <div class="grade-manage">
     <el-card>
-      <h2>成绩管理</h2>
-      <p>成绩管理功能开发中...</p>
+      <h2>请假审批</h2>
+      <p>请假审批功能开发中...</p>
     </el-card>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'GradeManage'
+  name: 'LeaveApproval'
 }
 </script>
 

@@ -1,20 +1,28 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import MainLayout from '../layout/MainLayout.vue'
+import Login from '../views/Login.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
+    path: '/login',
+    name: 'Login',
+    component: Login,
+    meta: { requiresAuth: false, title: '登录' }
+  },
+  {
     path: '/',
     component: MainLayout,
     redirect: '/dashboard',
+    meta: { requiresAuth: true },
     children: [
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('../views/Dashboard.vue'),
-        meta: { title: '数据概览', icon: 'el-icon-s-home' }
+        meta: { title: '系统首页', icon: 'el-icon-s-home' }
       },
       {
         path: 'students',
@@ -32,9 +40,14 @@ const routes = [
         path: 'grades',
         name: 'Grades',
         component: () => import('../views/GradeManage.vue'),
-        meta: { title: '成绩管理', icon: 'el-icon-document' }
+        meta: { title: '请假审批', icon: 'el-icon-document' }
       }
     ]
+  },
+  // 404 页面
+  {
+    path: '*',
+    redirect: '/login'
   }
 ]
 
@@ -42,6 +55,27 @@ const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
   routes
+})
+
+// 全局前置守卫
+router.beforeEach((to, from, next) => {
+  // 获取 token
+  const token = localStorage.getItem('token')
+  
+  // 判断是否需要登录
+  if (to.meta.requiresAuth) {
+    // 需要登录
+    if (token) {
+      // 已登录，放行
+      next()
+    } else {
+      // 未登录，跳转到登录页
+      next('/login')
+    }
+  } else {
+    // 不需要登录（如登录页），直接放行
+    next()
+  }
 })
 
 export default router
