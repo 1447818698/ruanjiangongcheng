@@ -202,9 +202,9 @@ npm run build
   - 引入 el-pagination 组件，使用 JS slice 方法实现纯前端动态分页
   - 支持每页条数切换（5/10/15/20）和页码跳转
 * **核心代码或文件**：`src/views/StudentManage.vue`
-* **遇到的问题**：待补充
-* **解决方法**：待补充
-* **Git 提交记录**：【待补充】
+* **遇到的问题**：
+* **解决方法**：
+* **Git 提交记录**：
 * **运行截图**：![Class 3 学生表格与分页](screenshots/class3-table-pagination.png)
 * **截图说明**：展示学生数据表格、性别与审批状态插槽渲染以及前端分页组件
 
