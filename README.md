@@ -10,7 +10,7 @@
 * **项目名称**：学生信息管理系统
 * **项目仓库链接**：https://gitee.com/yang-zizheng1/vue-project
 * **项目完成日期**：2026-06-08
-* **交付说明**：已完成 Class 1（工程搭建与后台 Layout 布局）、Class 2（嵌套路由配置与动态导航联动）、Class 3（学生数据表格渲染与前端分页）和 Class 4（核心数据 CRUD 与表单正则校验），项目已推送到 Gitee 远程仓库，开发环境可正常运行。
+* **交付说明**：已完成 Class 1（工程搭建与后台 Layout 布局）、Class 2（嵌套路由配置与动态导航联动）、Class 3（学生数据表格渲染与前端分页）、Class 4（核心数据 CRUD 与表单正则校验）和 Class 5（高级组件拓展与父子组件通信），项目已推送到 Gitee 远程仓库，开发环境可正常运行。
 
 ## 核心技术栈
 
@@ -230,13 +230,17 @@ npm run build
 
 ### class5：高级组件拓展与父子组件通信
 
-* **完成内容**：【待完成】
-* **核心代码或文件**：【待补充】
-* **遇到的问题**：【待补充】
-* **解决方法**：【待补充】
-* **Git 提交记录**：【待补充】
-* **运行截图**：【待补充】
-* **截图说明**：【待补充】
+* **完成内容**：
+  - 引入 el-tree 组织架构树，点击节点自动筛选对应班级学生
+  - 集成 el-upload 组件，支持选择图片后使用 FileReader 即时前端预览
+  - 将搜索栏抽离为独立 StudentSearchBar 子组件，通过 props（searchKey）和 $emit（search/add）进行父子通信
+  - 完善请假审批页面（GradeManage.vue），通过 localStorage 与 StudentManage 实现跨组件数据同步
+* **核心代码或文件**：`src/views/StudentManage.vue`、`src/components/StudentSearchBar.vue`、`src/views/GradeManage.vue`
+* **遇到的问题**：el-tree 点击系节点（非叶子节点）不应触发筛选；el-upload 需处理原始文件对象的 base64 转换
+* **解决方法**：通过节点 value 前缀（dept-）区分系节点与班级节点；使用 FileReader.readAsDataURL 将文件转 base64 赋给 form.avatar
+* **Git 提交记录**：【待提交后更新】
+* **运行截图**：![Class 5 树形筛选与头像上传](screenshots/class5-tree-filter.png)
+* **截图说明**：展示左侧组织架构树筛选 + 右侧表格联动 + 弹窗头像上传预览
 
 ### class6：Axios 封装与前端工程交付
 
@@ -264,15 +268,15 @@ npm run build
 * ✅ 是 - 学生列表、分页和状态显示正常
 * ✅ 是 - 新增、编辑、删除、查询功能正常
 * ✅ 是 - 表单必填、学号、手机号校验正常
-* ⏳ 待完成 - 组织架构树筛选功能正常
-* ⏳ 待完成 - 头像上传预览功能正常
+* ✅ 是 - 组织架构树筛选功能正常
+* ✅ 是 - 头像上传预览功能正常
 * ️ 部分完成 - README 已补齐文字说明，运行截图待补充
 
 ## 后续开发计划
 
 - [x] Class 3：学生数据表格渲染与前端分页
 - [x] Class 4：学生信息 CRUD 操作与表单校验
-- [ ] Class 5：组织架构树与头像上传功能
+- [x] Class 5：组织架构树与头像上传功能
 - [ ] Class 6：Axios 封装与工程交付
 - [ ] 完善所有功能模块的运行截图
 - [ ] 补充个人信息（学号、班级）
