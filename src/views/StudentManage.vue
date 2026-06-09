@@ -61,24 +61,27 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" align="center" fixed="right">
+        <el-table-column label="操作" width="160" align="center" fixed="right">
           <template slot-scope="scope">
-            <el-button
-              type="primary"
-              size="mini"
-              icon="el-icon-edit"
-              @click="handleEdit(scope.row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              type="danger"
-              size="mini"
-              icon="el-icon-delete"
-              @click="handleDelete(scope.row)"
-            >
-              删除
-            </el-button>
+            <div class="action-btns">
+              <el-button
+                type="text"
+                size="small"
+                icon="el-icon-edit"
+                @click="handleEdit(scope.row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                type="text"
+                size="small"
+                icon="el-icon-delete"
+                style="color: #F56C6C"
+                @click="handleDelete(scope.row)"
+              >
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -489,6 +492,18 @@ export default {
 
 .student-manage >>> .el-card__body {
   padding: 24px;
+}
+
+/* 操作按钮组 */
+.action-btns {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btns .el-button + .el-button {
+  margin-left: 0;
 }
 
 /* 分页容器 */
