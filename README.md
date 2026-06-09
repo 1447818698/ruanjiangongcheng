@@ -239,7 +239,7 @@ npm run build
 * **遇到的问题**：el-tree 点击系节点（非叶子节点）不应触发筛选；el-upload 需处理原始文件对象的 base64 转换
 * **解决方法**：通过节点 value 前缀（dept-）区分系节点与班级节点；使用 FileReader.readAsDataURL 将文件转 base64 赋给 form.avatar
 * **Git 提交记录**：`7ae1ad4 feat:实现组织架构树筛选、头像上传预览与父子组件通信联动`
-* **运行截图**：![Class 5 树形筛选与头像上传](screenshots/class5-tree-filter.png)
+* **运行截图**：
 * **截图说明**：展示左侧组织架构树筛选 + 右侧表格联动 + 弹窗头像上传预览
 
 ### class6：Axios 封装与前端工程交付
