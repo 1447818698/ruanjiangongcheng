@@ -24,6 +24,11 @@
           <i class="el-icon-user"></i>
           <span slot="title">学生管理</span>
         </el-menu-item>
+
+        <el-menu-item index="/classes">
+          <i class="el-icon-collection"></i>
+          <span slot="title">班级管理</span>
+        </el-menu-item>
         
         <el-menu-item index="/grades">
           <i class="el-icon-document"></i>
@@ -95,8 +100,11 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
+          // 清除登录状态
+          localStorage.removeItem('token')
+          localStorage.removeItem('userInfo')
           this.$message.success('已退出登录')
-          // 这里可以添加退出登录逻辑
+          this.$router.push('/login')
         }).catch(() => {})
       } else if (command === 'profile') {
         this.$message.info('个人中心功能开发中')
