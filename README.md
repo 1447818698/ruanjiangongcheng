@@ -39,6 +39,7 @@ vue-project/
 │   │   ├── Login.vue        # 登录页面
 │   │   ├── Dashboard.vue    # 系统首页
 │   │   ├── StudentManage.vue # 学生管理页面
+│   │   ├── ClassManage.vue  # 班级管理页面
 │   │   └── GradeManage.vue  # 请假审批页面
 │   ├── components/          # 公共组件目录（待扩展）
 │   ├── App.vue              # 根组件
@@ -98,10 +99,11 @@ npm run build
 * **默认登录密码**：`123456`
 * **后台首页入口**：http://localhost:8080/dashboard
 * **学生管理入口**：左侧菜单"学生管理" 或 http://localhost:8080/students
+* **班级管理入口**：左侧菜单"班级管理" 或 http://localhost:8080/classes
 * **请假审批入口**：左侧菜单"请假审批" 或 http://localhost:8080/grades
 * **退出登录入口**：顶部 Header 右侧用户头像下拉菜单 → "退出登录"
 * **未登录拦截说明**：通过路由守卫实现，未登录用户访问后台页面（除 `/login` 外）会自动跳转到登录页
-* **界面入口截图**：【请在此处粘贴登录页面截图】
+* **界面入口截图**：![登录页面](screenshots/class2-login.png)
 
 ## 系统功能模块
 
@@ -111,8 +113,7 @@ npm run build
 * **实现思路**：使用 Element-UI 的 `el-container`、`el-aside`、`el-header`、`el-main` 组件搭建布局框架
 * **涉及页面或组件**：`src/layout/MainLayout.vue`
 * **关键技术点**：Flex 布局、侧边栏折叠动画、响应式设计
-* **运行截图**：【请在此处粘贴截图】
-* **截图说明**：展示完整的后台布局界面
+* **运行截图**：![后台布局](screenshots/class2-menu-routing.png)
 
 ### 功能二：嵌套路由与菜单联动
 
@@ -120,8 +121,7 @@ npm run build
 * **实现思路**：使用 Vue Router 的嵌套路由功能，`el-menu` 组件启用 `router` 属性实现路由联动
 * **涉及页面或组件**：`src/router/index.js`、`src/layout/MainLayout.vue`
 * **关键技术点**：嵌套路由配置、`router-view` 渲染、菜单高亮状态管理
-* **运行截图**：【请在此处粘贴截图】
-* **截图说明**：展示菜单点击切换页面的效果
+* **运行截图**：![菜单联动](screenshots/class2-menu-routing.png)
 
 ### 功能三：登录鉴权与路由守卫
 
@@ -129,8 +129,7 @@ npm run build
 * **实现思路**：使用 `router.beforeEach` 全局前置守卫，通过 LocalStorage 存储 token 实现登录状态管理
 * **涉及页面或组件**：`src/views/Login.vue`、`src/router/index.js`
 * **关键技术点**：路由守卫、Local Storage、表单验证、模拟登录
-* **运行截图**：【请在此处粘贴截图】
-* **截图说明**：展示登录页面和路由拦截效果
+* **运行截图**：![登录鉴权](screenshots/class2-login.png)
 
 ### 功能四：系统首页数据概览
 
@@ -188,10 +187,11 @@ npm run build
 * **遇到的问题**：ESLint 组件命名警告（单单词组件名）
 * **解决方法**：忽略 ESLint 警告（项目配置允许单单词组件名）
 * **Git 提交记录**：
-  - `6944f76 feat: 配置后台嵌套路由表与登录页面`
-  - `4507a34 111`（界面样式优化）
-* **运行截图**：【请在此处粘贴截图】
-* **截图说明**：展示登录页面和菜单联动效果
+  - `6674c58 feat:配置后台嵌套路由表`
+  - `36d4dba feat:实现菜单与路由高亮联动`
+* **运行截图**：![Class 2 登录页面](screenshots/class2-login.png)
+![Class 2 菜单路由联动](screenshots/class2-menu-routing.png)
+* **截图说明**：展示登录页面和后台菜单联动效果
 
 ### class3：学生数据表格渲染与前端分页
 
@@ -235,9 +235,10 @@ npm run build
 
 ## Git 提交里程碑
 
-1. `42305db` feat: 初始化学生信息管理系统项目 —— 项目初始化，配置 Git 仓库和基础结构
-2. `6944f76` feat: 配置后台嵌套路由表与登录页面 —— 创建登录页和嵌套路由配置
-3. `4507a34` 111 —— 界面样式优化，包括侧边栏、卡片、登录页面动画效果
+1. `4ab21c4` docs: 优化 README 图片管理 —— README 文档完善与截图管理
+2. `525fcde` docs: 完善项目交付 README 文档 —— 项目交付文档编写
+3. `6674c58` feat:配置后台嵌套路由表 —— 优化路由守卫，修复子路由鉴权
+4. `36d4dba` feat:实现菜单与路由高亮联动 —— 补全班级管理菜单项，完善退出登录功能
 
 ## 验收自查表
 
