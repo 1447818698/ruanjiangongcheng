@@ -62,8 +62,10 @@ router.beforeEach((to, from, next) => {
   // 获取 token
   const token = localStorage.getItem('token')
   
-  // 判断是否需要登录
-  if (to.meta.requiresAuth) {
+  // 检查是否需要登录验证（遍历匹配的所有路由，包括父路由）
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  
+  if (requiresAuth) {
     // 需要登录
     if (token) {
       // 已登录，放行
@@ -73,8 +75,13 @@ router.beforeEach((to, from, next) => {
       next('/login')
     }
   } else {
-    // 不需要登录（如登录页），直接放行
-    next()
+    // 不需要登录（如登录页）
+    if (to.path === '/login' && token) {
+      // 已登录用户访问登录页，重定向到首页
+      next('/dashboard')
+    } else {
+      next()
+    }
   }
 })
 
