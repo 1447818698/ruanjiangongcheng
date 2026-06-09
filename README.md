@@ -221,7 +221,7 @@ npm run build
 * **核心代码或文件**：`src/views/StudentManage.vue`
 * **遇到的问题**：编辑表单时若直接引用原始数据对象，修改表单会同步污染表格数据
 * **解决方法**：使用 ES6 展开运算符 `{ ...row }` 进行浅拷贝回显，提交时再通过 `this.$set` 更新原数组
-* **Git 提交记录**：【待提交后更新】
+* **Git 提交记录**：`81da397 feat:实现学生数据CRUD与表单正则校验及localStorage持久化`
 * **运行截图**：![Class 4 CRUD与表单校验](screenshots/class4-crud-dialog.png)
 * **截图说明**：展示新增/编辑弹窗表单（含正则校验规则）及表格 CRUD 操作
 
