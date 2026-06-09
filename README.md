@@ -223,10 +223,10 @@ npm run build
 * **解决方法**：使用 ES6 展开运算符 `{ ...row }` 进行浅拷贝回显，提交时再通过 `this.$set` 更新原数组
 * **Git 提交记录**：`81da397 feat:实现学生数据CRUD与表单正则校验及localStorage持久化`
 * **运行截图**：![Class 4 CRUD与表单校验](screenshots/class4-1.png)
-[Class 4 CRUD与表单改动](screenshots/class4-2.png)
-[Class 4 CRUD与表单增加](screenshots/class4-3.png)
-[Class 4 CRUD与表单删除](screenshots/class4-4.png)
-* **截图说明**：展示新增/编辑弹窗表单（含正则校验规则）及表格 CRUD 操作
+![Class 4 CRUD与表单改动](screenshots/class4-2.png)
+![Class 4 CRUD与表单增加](screenshots/class4-3.png)
+![Class 4 CRUD与表单删除](screenshots/class4-4.png)
+* **截图说明**：分别展示新增弹窗表单、编辑数据回显与修改、新增成功后的表格、删除确认对话框
 
 ### class5：高级组件拓展与父子组件通信
 
