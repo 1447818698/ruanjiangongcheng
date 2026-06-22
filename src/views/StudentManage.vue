@@ -290,6 +290,12 @@ export default {
       return this.filteredList.slice(start, start + this.pageSize)
     }
   },
+  watch: {
+    // 搜索关键字变化时立即复位到第 1 页，避免防抖延迟期间表格空白
+    searchKey() {
+      this.currentPage = 1
+    }
+  },
   mounted() {
     this.loadData()
   },
@@ -310,8 +316,8 @@ export default {
 
     // ---- 树形节点点击筛选 ----
     handleTreeNodeClick(data) {
-      // 叶子节点（班级名）才触发筛选；系节点和根节点仅展开/折叠
-      if (!data.children || data.children.length === 0) {
+      // 叶子节点（班级名）或根节点（所有班级）均触发筛选
+      if (!data.children || data.children.length === 0 || data.value === '') {
         this.treeFilter = data.value || ''
         this.currentPage = 1
         this.searchKey = ''
