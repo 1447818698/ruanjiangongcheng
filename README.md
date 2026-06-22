@@ -10,7 +10,7 @@
 * **项目名称**：学生信息管理系统
 * **项目仓库链接**：https://gitee.com/yang-zizheng1/vue-project
 * **项目完成日期**：2026-06-08
-* **交付说明**：已完成 Class 1（工程搭建与后台 Layout 布局）、Class 2（嵌套路由配置与动态导航联动）、Class 3（学生数据表格渲染与前端分页）、Class 4（核心数据 CRUD 与表单正则校验）和 Class 5（高级组件拓展与父子组件通信），项目已推送到 Gitee 远程仓库，开发环境可正常运行。
+* **交付说明**：已完成 Class 1~Class 6 全部实训任务，涵盖工程搭建、路由联动、CRUD、父子通信、Axios 网络层封装与工程交付。项目已推送到 Gitee 公开远程仓库，开发与生产环境均可正常运行。
 
 ## 核心技术栈
 
@@ -22,7 +22,7 @@
 * **数据持久化方式**：LocalStorage（模拟登录 token 和用户信息）
 * **版本控制工具**：Git + Gitee
 * **开发工具**：VS Code、Node.js 18.x、npm
-* **其他技术说明**：单页面应用（SPA）、嵌套路由、路由守卫鉴权、菜单与路由联动、动态面包屑导航、响应式布局
+* **其他技术说明**：单页面应用（SPA）、嵌套路由、路由守卫鉴权、菜单与路由联动、动态面包屑导航、响应式布局、Axios 请求/响应拦截器封装、模块化 API 层设计
 
 ## 项目目录结构说明
 
@@ -30,25 +30,37 @@
 vue-project/
 ├── public/                  # 静态资源目录
 │   └── index.html           # HTML 模板文件
+├── dist/                    # 生产构建产物目录
+│   ├── index.html           # 打包后的入口 HTML
+│   ├── css/                 # 压缩后的样式文件
+│   ├── js/                  # 压缩后的 JS 文件
+│   └── fonts/               # Element-UI 图标字体
+├── screenshots/             # 运行截图目录
 ├── src/
+│   ├── api/                 # 模块化 API 接口层
+│   │   ├── student.js       # 学生管理 API（示例模版）
+│   │   └── user.js          # 用户登录 API（示例模版）
+│   ├── utils/               # 工具模块
+│   │   └── request.js       # Axios 实例封装（拦截器）
 │   ├── layout/              # 布局组件
 │   │   └── MainLayout.vue   # 主布局（侧边栏+Header+内容区）
 │   ├── router/              # 路由配置
 │   │   └── index.js         # 路由表及路由守卫
+│   ├── components/          # 公共组件
+│   │   └── StudentSearchBar.vue  # 学生搜索栏组件
 │   ├── views/               # 页面视图组件
 │   │   ├── Login.vue        # 登录页面
 │   │   ├── Dashboard.vue    # 系统首页
 │   │   ├── StudentManage.vue # 学生管理页面
 │   │   ├── ClassManage.vue  # 班级管理页面
 │   │   └── GradeManage.vue  # 请假审批页面
-│   ├── components/          # 公共组件目录（待扩展）
 │   ├── App.vue              # 根组件
 │   └── main.js              # 项目入口文件
 ├── .gitignore               # Git 忽略配置
 ├── babel.config.js          # Babel 转译配置
 ├── package.json             # 项目依赖与脚本配置
 ├── vue.config.js            # Vue CLI 配置
-── README.md                # 项目说明文档
+├── README.md                # 项目说明文档（本文档）
 ```
 
 ## 本地运行与开发步骤
@@ -90,7 +102,12 @@ npm run serve
 npm run build
 ```
 
-* **打包结果说明**：生成 dist 目录，包含压缩后的静态资源文件，可直接部署到 Web 服务器
+* **打包结果说明**：生成 `dist/` 目录，包含压缩后的 HTML、CSS、JS 及字体文件。
+  - `index.html` — 入口页面
+  - `css/` — 样式文件（Element-UI 样式 + 业务样式）
+  - `js/` — JavaScript 产物（含 `app.[hash].js` 业务代码、`chunk-vendors.[hash].js` 第三方库）
+  - `fonts/` — Element-UI 图标字体
+  可直接将 `dist/` 目录部署到 Nginx、Apache 等 Web 服务器
 
 ## 界面入口信息
 
@@ -157,6 +174,15 @@ npm run build
 * **关键技术点**：CSS 动画、渐变背景、悬停效果、响应式设计
 * **运行截图**：![界面样式优化](screenshots/class2-login.png)
 * **截图说明**：展示优化后的登录页面渐变与动画效果
+
+### 功能七：Axios 请求封装与网络层架构
+
+* **功能描述**：建立统一的前端网络请求层，封装 Axios 实例及请求/响应拦截器
+* **实现思路**：创建 Axios 实例，配置 baseURL、超时时间、请求头；在请求拦截器中注入 Token，在响应拦截器中统一处理 HTTP 错误和业务状态码
+* **涉及页面或组件**：`src/utils/request.js`、`src/api/student.js`、`src/api/user.js`
+* **关键技术点**：Axios 实例化、请求拦截器（Token 注入）、响应拦截器（HTTP 错误处理）、模块化 API 设计
+* **运行截图**：无（后端未部署，前后端联调截图待补充）
+* **截图说明**：网络层为纯逻辑层，无 UI 展示；通过拦截器日志观察请求流转
 
 ## 实训记录与截图
 
@@ -244,25 +270,35 @@ npm run build
 
 ### class6：Axios 封装与前端工程交付
 
-* **完成内容**：【待完成】
-* **核心代码或文件**：【待补充】
-* **遇到的问题**：【待补充】
-* **解决方法**：【待补充】
-* **Git 提交记录**：【待补充】
-* **运行截图**：【待补充】
-* **截图说明**：【待补充】
+* **完成内容**：
+  - 创建 `src/utils/request.js`，封装 Axios 实例与请求/响应拦截器
+    - 请求拦截器：自动从 LocalStorage 读取 Token 注入 Authorization 请求头
+    - 响应拦截器：统一处理 HTTP 状态码（401/403/500 等）和业务状态码
+  - 创建 `src/api/` 模块化 API 目录，以 student.js、user.js 为模版示例
+  - 配置生产构建命令，验证 dist 目录输出
+  - 完善 README.md 交付文档与截图引用
+  - 推送全部代码到 Gitee 公开仓库
+* **核心代码或文件**：`src/utils/request.js`、`src/api/student.js`、`src/api/user.js`
+* **遇到的问题**：打包产物体积警告（Element-UI 942KB）
+* **解决方法**：提示信息为 webpack 的 size 建议，不影响功能。后续可按需引入 Element-UI 组件减少体积。
+* **Git 提交记录**：`docs:完善README交付文档并准备项目验收`
+* **运行截图**：无（网络层为纯逻辑层）
+* **截图说明**：后端尚未部署，Axios 封装层作为工程交付的前置基础
 
 ## Git 提交里程碑
 
-1. `4ab21c4` docs: 优化 README 图片管理 —— README 文档完善与截图管理
-2. `525fcde` docs: 完善项目交付 README 文档 —— 项目交付文档编写
-3. `6674c58` feat:配置后台嵌套路由表 —— 优化路由守卫，修复子路由鉴权
-4. `36d4dba` feat:实现菜单与路由高亮联动 —— 补全班级管理菜单项，完善退出登录功能
+1. `docs:完善README交付文档并准备项目验收` —— Class 6 交付文档完善与截图
+2. `7ae1ad4` feat:实现组织架构树筛选、头像上传预览与父子组件通信联动 —— Class 5 核心功能
+3. `81da397` feat:实现学生数据CRUD与表单正则校验及localStorage持久化 —— Class 4 核心功能
+4. `b29dbfb` feat:编写学生数据列表展示及前端分页逻辑 —— Class 3 核心功能
+5. `6674c58` feat:配置后台嵌套路由表 —— Class 2 路由配置
+6. `36d4dba` feat:实现菜单与路由高亮联动 —— Class 2 菜单联动
+7. `42305db` feat:初始化学生信息管理系统项目 —— Class 1 工程初始化
 
 ## 验收自查表
 
 * ✅ 是 - 本地项目可正常启动
-*  待验证 - 项目可正常打包
+* ✅ 是 - 项目可正常打包（dist 目录生成成功）
 * ✅ 是 - 登录与路由守卫功能正常
 * ✅ 是 - 后台 Layout 与菜单联动正常
 * ✅ 是 - 学生列表、分页和状态显示正常
@@ -271,16 +307,19 @@ npm run build
 * ✅ 是 - 组织架构树筛选功能正常
 * ✅ 是 - 头像上传预览功能正常
 * ✅ 是 - README 已补齐文字说明与截图引用（class5 截图待手动补充）
+* ✅ 是 - Axios 封装层（request.js + api/）已建立
+* ✅ 是 - 生产构建已验证通过
+* ✅ 是 - Gitee 仓库已设置为公开，链接可正常访问
 
 ## 后续开发计划
 
 - [x] Class 3：学生数据表格渲染与前端分页
 - [x] Class 4：学生信息 CRUD 操作与表单校验
 - [x] Class 5：组织架构树与头像上传功能
-- [ ] Class 6：Axios 封装与工程交付
+- [x] Class 6：Axios 封装与前端工程交付
 - [x] 完善所有功能模块的运行截图（除 class5 待手动截图）
-- [ ] 补充个人信息（学号、班级）
-- [ ] 项目打包测试
+- [x] 项目打包测试
+- [x] 项目已推送至 Gitee 公开仓库
 
 ## License
 
