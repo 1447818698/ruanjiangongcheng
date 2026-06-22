@@ -154,8 +154,8 @@ npm run build
 * **实现思路**：使用 Element-UI 的 `el-card`、`el-timeline` 组件展示统计信息和进度
 * **涉及页面或组件**：`src/views/Dashboard.vue`
 * **关键技术点**：卡片布局、渐变图标、时间线组件、悬停动画效果
-* **运行截图**：![系统首页数据概览](screenshots/class2-menu-routing.png)
-* **截图说明**：展示系统首页的统计卡片和进度时间线（Dashboard 页面含菜单联动效果）
+* **运行截图**：![系统首页数据概览](screenshots/dashboard-overview.png)
+* **截图说明**：展示系统首页的统计卡片和进度时间线
 
 ### 功能五：面包屑导航与用户信息
 
@@ -163,8 +163,8 @@ npm run build
 * **实现思路**：通过路由元信息动态生成面包屑，使用 `el-dropdown` 实现用户菜单
 * **涉及页面或组件**：`src/layout/MainLayout.vue`
 * **关键技术点**：路由元信息、动态面包屑、下拉菜单、用户交互
-* **运行截图**：![面包屑导航与用户信息](screenshots/class1-backend-layout.png)
-* **截图说明**：展示顶部 Header 面包屑导航和用户下拉菜单
+* **运行截图**：![面包屑导航与用户信息](screenshots/dashboard-overview.png)
+* **截图说明**：展示顶部 Header 面包屑导航（系统首页）和右上角用户头像下拉菜单
 
 ### 功能六：界面样式优化
 
@@ -172,8 +172,8 @@ npm run build
 * **实现思路**：使用 CSS 渐变、阴影、动画等效果提升视觉体验
 * **涉及页面或组件**：所有页面组件
 * **关键技术点**：CSS 动画、渐变背景、悬停效果、响应式设计
-* **运行截图**：![界面样式优化](screenshots/class2-login.png)
-* **截图说明**：展示优化后的登录页面渐变与动画效果
+* **运行截图**：![界面样式优化](screenshots/students-full.png)
+* **截图说明**：展示优化后的学生管理页面布局，含树形筛选、表格、分页组件样式
 
 ### 功能七：Axios 请求封装与网络层架构
 
@@ -265,8 +265,9 @@ npm run build
 * **遇到的问题**：el-tree 点击系节点（非叶子节点）不应触发筛选；el-upload 需处理原始文件对象的 base64 转换
 * **解决方法**：通过节点 value 前缀（dept-）区分系节点与班级节点；使用 FileReader.readAsDataURL 将文件转 base64 赋给 form.avatar
 * **Git 提交记录**：`7ae1ad4 feat:实现组织架构树筛选、头像上传预览与父子组件通信联动`
-* **运行截图**：![Class 5 组织架构树与头像上传](screenshots/class5-tree-upload.png)
-* **截图说明**：展示左侧组织架构树筛选 + 右侧表格联动 + 弹窗头像上传预览（待补充截图文件）
+* **运行截图**：![Class 5 编辑弹窗与学生头像上传](screenshots/class5-tree-upload.png)
+![Class 5 完整学生管理页](screenshots/students-full.png)
+* **截图说明**：上图展示编辑弹窗含头像上传预览；下图展示组织架构树筛选（软件技术2401班）+ 右侧学生表格联动布局
 
 ### class6：Axios 封装与前端工程交付
 
@@ -306,7 +307,7 @@ npm run build
 * ✅ 是 - 表单必填、学号、手机号校验正常
 * ✅ 是 - 组织架构树筛选功能正常
 * ✅ 是 - 头像上传预览功能正常
-* ✅ 是 - README 已补齐文字说明与截图引用（class5 截图待手动补充）
+* ✅ 是 - README 已补齐文字说明与运行截图，所有功能模块均有对应截图
 * ✅ 是 - Axios 封装层（request.js + api/）已建立
 * ✅ 是 - 生产构建已验证通过
 * ✅ 是 - Gitee 仓库已设置为公开，链接可正常访问
@@ -317,7 +318,7 @@ npm run build
 - [x] Class 4：学生信息 CRUD 操作与表单校验
 - [x] Class 5：组织架构树与头像上传功能
 - [x] Class 6：Axios 封装与前端工程交付
-- [x] 完善所有功能模块的运行截图（除 class5 待手动截图）
+- [x] 完善所有功能模块的运行截图（全部完成）
 - [x] 项目打包测试
 - [x] 项目已推送至 Gitee 公开仓库
 
