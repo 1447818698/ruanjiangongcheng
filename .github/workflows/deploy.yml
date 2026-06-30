@@ -1,6 +1,6 @@
 # ==============================================================================
 # Spring Boot CI/CD Pipeline
-# 触发条件：仅当代码推送到 main 分支时执行
+# 触发条件：仅当代码推送到 master 分支时执行
 # 工作流程：
 #   1. test —— 搭建 MySQL + JDK 17 环境，执行单元测试
 #   2. build-and-push —— 测试通过后，构建并推送 Docker 镜像
@@ -11,14 +11,12 @@ name: Spring Boot CI/CD
 on:
   push:
     branches:
-      - main
+      - master
 
 # 全局环境变量（可根据项目实际修改）
 env:
   DOCKER_IMAGE_NAME: my-springboot-app
   DOCKER_REGISTRY: ghcr.io
-  # 以下变量根据实际用户名/组织名修改
-  # DOCKER_IMAGE_TAG: ${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:latest
 
 jobs:
   # ============================================================================
@@ -34,15 +32,12 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          # 初始化 root 密码（从 GitHub Secrets 读取，避免明文泄露）
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          # 自动创建测试用数据库
           MYSQL_DATABASE: testdb
           MYSQL_USER: testuser
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
-        # 等待 MySQL 就绪的健康检查
         options: >-
           --health-cmd="mysqladmin ping -h localhost -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }}"
           --health-interval=10s
@@ -57,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
 
       # ----------------------------------------
-      # Step 2: 搭建 JDK 17 运行环境（内置 Maven 依赖缓存）
+      # Step 2: 搭建 JDK 17（内置 Maven 依赖缓存）
       # ----------------------------------------
       - name: 搭建 JDK 17
         uses: actions/setup-java@v4
@@ -88,22 +83,21 @@ jobs:
           done
 
       # ----------------------------------------
-      # Step 5: 执行单元测试（含集成测试）
+      # Step 5: 执行单元测试
+      # 注意：JDBC URL 用单引号包裹，防止 YAML 将 & 解析为锚点语法
       # ----------------------------------------
       - name: 执行单元测试
         run: |
-          # 使用 Maven Wrapper（若无 mvnw 则改为 mvn）
           ./mvnw clean test \
             -Dspring.profiles.active=test \
-            -Dspring.datasource.url=jdbc:mysql://127.0.0.1:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+            -Dspring.datasource.url='jdbc:mysql://127.0.0.1:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC'
         env:
-          # 数据库连接参数通过环境变量传递，避免在 pom.xml 中硬编码
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          SPRING_DATASOURCE_URL: 'jdbc:mysql://127.0.0.1:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC'
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
 
       # ----------------------------------------
-      # Step 6: 生成测试报告（可选）
+      # Step 6: 生成测试报告
       # ----------------------------------------
       - name: 生成测试报告
         if: always()
@@ -115,15 +109,14 @@ jobs:
           fail-on-error: true
 
   # ============================================================================
-  # Job 2: Docker 镜像构建与推送
+  # Job 2: Docker 镜像构建与推送（多阶段构建，Dockerfile 内部完成编译）
   # 仅在 test Job 通过后才执行
   # ============================================================================
   build-and-push:
     name: Docker 镜像构建与推送
     runs-on: ubuntu-latest
-    needs: test  # 依赖于 test Job 成功
+    needs: test
 
-    # 为产物设置权限：允许从 Actions 页面下载
     permissions:
       contents: read
       packages: write
@@ -136,11 +129,8 @@ jobs:
         uses: actions/checkout@v4
 
       # ----------------------------------------
-      # Step 2: 登录容器镜像仓库
-      # 支持 Docker Hub 和 GitHub Container Registry (ghcr.io)
-      # 使用说明：
-      #   - Docker Hub：配置 secrets.DOCKER_USERNAME 和 secrets.DOCKER_PASSWORD
-      #   - GitHub Container Registry：默认使用 GITHUB_TOKEN
+      # Step 2: 登录容器镜像仓库（默认 ghcr.io）
+      # 备选 Docker Hub：取消下方注释并注释此段
       # ----------------------------------------
       - name: 登录 GitHub Container Registry
         uses: docker/login-action@v3
@@ -149,7 +139,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Steps 2 备选：登录 Docker Hub（取消注释上方并注释本段）
       # - name: 登录 Docker Hub
       #   uses: docker/login-action@v3
       #   with:
@@ -157,7 +146,7 @@ jobs:
       #     password: ${{ secrets.DOCKER_PASSWORD }}
 
       # ----------------------------------------
-      # Step 3: 提取 Docker 元数据（标签、注解）
+      # Step 3: 提取 Docker 元数据（自动生成标签）
       # ----------------------------------------
       - name: 提取 Docker 元数据
         id: meta
@@ -165,14 +154,10 @@ jobs:
         with:
           images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}
           tags: |
-            # 语义化标签：如 v1.2.3
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            # 分支名标签：如 main
             type=ref,event=branch
-            # 最新提交 SHA 的短格式
             type=sha,format=short
-            # 始终标记为 latest
             type=raw,value=latest,enable={{is_default_branch}}
 
       # ----------------------------------------
@@ -182,7 +167,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # 使用 BuildKit 缓存加速重复构建
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
@@ -190,7 +174,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       # ----------------------------------------
-      # Step 5: 生成 Docker 镜像清单（可选，用于后续部署）
+      # Step 5: 生成 Docker 镜像摘要（展示在 Actions 页面）
       # ----------------------------------------
       - name: 生成 Docker 镜像摘要
         run: |
