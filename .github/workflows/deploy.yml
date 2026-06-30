@@ -1,0 +1,129 @@
+# ==============================================================================
+# Vue.js CI/CD Pipeline
+# 触发条件：仅当代码推送到 master 分支时执行
+# 工作流程：
+#   1. test —— Node.js 环境安装依赖，执行代码检查与构建验证
+#   2. build-and-push —— 测试通过后，构建并推送 Docker 镜像
+# ==============================================================================
+
+name: Vue.js CI/CD
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  DOCKER_IMAGE_NAME: vue-student-manage
+  DOCKER_REGISTRY: ghcr.io
+
+jobs:
+  # ============================================================================
+  # Job 1: 代码检查与构建验证
+  # ============================================================================
+  test:
+    name: 代码检查与构建验证
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------------------
+      # Step 1: 检出代码
+      # ----------------------------------------
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # ----------------------------------------
+      # Step 2: 搭建 Node.js 环境
+      # ----------------------------------------
+      - name: 搭建 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # ----------------------------------------
+      # Step 3: 安装依赖
+      # ----------------------------------------
+      - name: 安装依赖
+        run: npm ci
+
+      # ----------------------------------------
+      # Step 4: ESLint 代码规范检查
+      # ----------------------------------------
+      - name: ESLint 代码检查
+        run: npm run lint
+
+      # ----------------------------------------
+      # Step 5: 构建验证
+      # ----------------------------------------
+      - name: 构建验证
+        run: npm run build
+
+  # ============================================================================
+  # Job 2: Docker 镜像构建与推送
+  # 仅在 test Job 通过后才执行
+  # ============================================================================
+  build-and-push:
+    name: Docker 镜像构建与推送
+    runs-on: ubuntu-latest
+    needs: test
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # ----------------------------------------
+      # Step 1: 检出代码
+      # ----------------------------------------
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # ----------------------------------------
+      # Step 2: 登录容器镜像仓库
+      # ----------------------------------------
+      - name: 登录 GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ----------------------------------------
+      # Step 3: 提取 Docker 元数据（自动生成标签）
+      # ----------------------------------------
+      - name: 提取 Docker 元数据
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # ----------------------------------------
+      # Step 4: 构建并推送 Docker 镜像
+      # ----------------------------------------
+      - name: 构建并推送 Docker 镜像
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # ----------------------------------------
+      # Step 5: 输出镜像摘要到 Actions 页面
+      # ----------------------------------------
+      - name: 生成 Docker 镜像摘要
+        run: |
+          echo "## Docker 镜像构建结果" >> $GITHUB_STEP_SUMMARY
+          echo "- 镜像仓库: ${{ env.DOCKER_REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 镜像名称: ${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 标签列表:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
