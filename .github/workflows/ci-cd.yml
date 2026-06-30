@@ -1,0 +1,141 @@
+# =============================================================================
+# Spring Boot 项目 CI/CD 工作流
+# 功能：推送代码到 main 分支时自动触发 → 搭建环境 → 运行测试 → 构建镜像
+# =============================================================================
+
+name: Spring Boot CI/CD
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 1. 触发条件：仅在 push 到 main 分支时运行
+# ──────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 2. 环境变量（可按项目实际情况修改）
+# ──────────────────────────────────────────────────────────────────────────────
+env:
+  # Docker 镜像相关
+  DOCKER_IMAGE_NAME: ruanjiangongcheng-backend   # 镜像名称
+  DOCKER_REGISTRY: docker.io                      # 镜像仓库地址（可替换为私有仓库）
+  # Java 相关
+  JAVA_VERSION: '17'                              # JDK 版本
+  # MySQL 相关
+  MYSQL_DATABASE: testdb                          # 测试数据库名称
+  MYSQL_USER: test                                # 测试数据库用户名
+  MYSQL_PASSWORD: test123                          # 测试数据库密码
+  MYSQL_ROOT_PASSWORD: root123                     # MySQL root 密码
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3. 工作流任务定义
+# ──────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # 任务一：构建、测试与 Docker 镜像构建
+  # ────────────────────────────────────────────────────────────────────────────
+  build-and-test:
+    # 运行环境：Ubuntu 最新版
+    runs-on: ubuntu-latest
+
+    # ── 服务容器（用于搭建 MySQL 测试环境） ─────────────────────────────────
+    services:
+      # MySQL 服务
+      mysql:
+        image: mysql:8.0                          # 使用 MySQL 8.0
+        env:
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+        ports:
+          - 3306:3306                              # 映射到宿主机 3306 端口
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        # 等待 MySQL 完全就绪后再开始后续步骤
+
+    steps:
+      # ── 步骤 1：检出代码 ────────────────────────────────────────────────
+      - name: ① 检出代码（Checkout）
+        uses: actions/checkout@v4
+
+      # ── 步骤 2：设置 JDK ─────────────────────────────────────────────────
+      - name: ② 设置 JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'                 # Eclipse Temurin（Adoptium）
+          cache: maven                            # 缓存 Maven 依赖，加速构建
+
+      # ── 步骤 3：等待 MySQL 就绪 ──────────────────────────────────────────
+      - name: ③ 等待 MySQL 服务就绪
+        run: |
+          echo "等待 MySQL 启动..."
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; then
+              echo "MySQL 已就绪"
+              break
+            fi
+            echo "等待中... ($i/30)"
+            sleep 2
+          done
+
+      # ── 步骤 4：缓存 Maven 依赖 ─────────────────────────────────────────
+      - name: ④ 缓存 Maven 依赖（加速构建）
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # ── 步骤 5：运行单元测试 ────────────────────────────────────────────
+      - name: ⑤ 执行 Maven 单元测试
+        run: |
+          echo "正在执行单元测试..."
+          mvn clean test --batch-mode -Dspring.profiles.active=ci
+        env:
+          # 将 MySQL 连接信息注入测试环境
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/${{ env.MYSQL_DATABASE }}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          SPRING_DATASOURCE_USERNAME: ${{ env.MYSQL_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+
+      # ── 步骤 6：构建 Docker 镜像 ────────────────────────────────────────
+      - name: ⑥ 构建 Spring Boot Docker 镜像
+        run: |
+          echo "正在构建 Docker 镜像..."
+          # 使用 Maven 插件构建 Docker 镜像（需在 pom.xml 中配置 docker-maven-plugin）
+          # 如果项目使用 spring-boot-maven-plugin 构建 OCI 镜像，也可用下方命令：
+          mvn spring-boot:build-image \
+            -DskipTests \
+            --batch-mode \
+            -Dspring-boot.build-image.imageName=${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+          
+          # 也可用 Dockerfile 方式构建（取消下方注释即可）
+          # docker build -t ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} .
+          
+          echo "镜像构建完成：${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}"
+
+      # ── 步骤 7：（可选）登录镜像仓库并推送 ─────────────────────────────
+      # 如需自动推送到 Docker Hub／私有仓库，取消下方注释并配置 GitHub Secrets
+      # - name: ⑦ 登录 Docker 镜像仓库
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      #
+      # - name: ⑧ 推送 Docker 镜像到仓库
+      #   run: |
+      #     docker tag ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} \
+      #       ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+      #     docker push ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+      #
+      #     # 同时打上 latest 标签
+      #     docker tag ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} \
+      #       ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+      #     docker push ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
