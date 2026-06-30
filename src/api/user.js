@@ -1,4 +1,6 @@
-import request from '../utils/request'
+// import request from '../utils/request'
+// 当前使用 LocalStorage 模拟登录，request 导入暂时注释。
+// 对接真实后端时取消注释下方 import 和各函数即可。
 
 /**
  * 用户/登录 API

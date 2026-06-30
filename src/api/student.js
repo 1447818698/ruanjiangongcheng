@@ -1,4 +1,6 @@
-import request from '../utils/request'
+// import request from '../utils/request'
+// 当前无后端服务，request 导入暂时注释以避免 ESLint 未使用变量警告。
+// 对接真实后端时取消注释下方 import 和各函数即可。
 
 /**
  * 学生管理 API

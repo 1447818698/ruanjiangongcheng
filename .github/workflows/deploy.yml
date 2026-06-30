@@ -35,10 +35,10 @@ jobs:
       # ----------------------------------------
       # Step 2: 搭建 Node.js 环境
       # ----------------------------------------
-      - name: 搭建 Node.js 20
+      - name: 搭建 Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       # ----------------------------------------
