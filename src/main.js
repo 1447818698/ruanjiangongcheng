@@ -8,6 +8,9 @@ Vue.config.productionTip = false
 
 Vue.use(ElementUI)
 
+// 全局 EventBus - 用于同标签页内组件间通信
+Vue.prototype.$bus = new Vue()
+
 new Vue({
   router,
   render: h => h(App)

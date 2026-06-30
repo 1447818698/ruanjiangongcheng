@@ -13,7 +13,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-label">在册学生</div>
-            <div class="stat-value">24</div>
+            <div class="stat-value">{{ studentCount }}</div>
           </div>
         </div>
       </el-card>
@@ -25,7 +25,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-label">覆盖班级</div>
-            <div class="stat-value">2</div>
+            <div class="stat-value">{{ classCount }}</div>
           </div>
         </div>
       </el-card>
@@ -37,7 +37,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-label">待审批</div>
-            <div class="stat-value">5</div>
+            <div class="stat-value">{{ pendingCount }}</div>
           </div>
         </div>
       </el-card>
@@ -84,7 +84,53 @@
 
 <script>
 export default {
-  name: 'Dashboard'
+  name: 'Dashboard',
+  data() {
+    return {
+      studentList: []
+    }
+  },
+  computed: {
+    studentCount() {
+      return this.studentList.length
+    },
+    classCount() {
+      const classes = new Set(this.studentList.map(item => item['class']))
+      return classes.size
+    },
+    pendingCount() {
+      return this.studentList.filter(item => item.status === '待审批').length
+    }
+  },
+  mounted() {
+    this.loadData()
+    window.addEventListener('storage', this.onStorageChange)
+    this.$bus.$on('student-data-changed', this.onDataChanged)
+  },
+  beforeDestroy() {
+    window.removeEventListener('storage', this.onStorageChange)
+    this.$bus.$off('student-data-changed', this.onDataChanged)
+  },
+  methods: {
+    onStorageChange(e) {
+      if (e.key === 'studentData') this.loadData()
+    },
+    onDataChanged() {
+      this.loadData()
+    },
+    loadData() {
+      const stored = localStorage.getItem('studentData')
+      if (stored) {
+        try {
+          this.studentList = JSON.parse(stored)
+          if (!Array.isArray(this.studentList)) throw new Error('数据格式异常')
+        } catch (e) {
+          console.error('Dashboard: localStorage 数据损坏:', e)
+          this.studentList = []
+        }
+      }
+    }
+  }
 }
 </script>
 

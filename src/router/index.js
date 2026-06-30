@@ -46,8 +46,14 @@ const routes = [
   },
   // 404 页面
   {
+    path: '/404',
+    name: 'NotFound',
+    component: () => import('../views/NotFound.vue'),
+    meta: { requiresAuth: false, title: '页面不存在' }
+  },
+  {
     path: '*',
-    redirect: '/login'
+    redirect: '/404'
   }
 ]
 

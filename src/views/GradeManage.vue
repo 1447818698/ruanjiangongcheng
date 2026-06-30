@@ -88,9 +88,12 @@ export default {
     this.loadData()
     // 监听 localStorage 变化，实现跨标签页数据同步
     window.addEventListener('storage', this.onStorageChange)
+    // 监听同标签页内 EventBus 数据变更事件
+    this.$bus.$on('student-data-changed', this.onDataChanged)
   },
   beforeDestroy() {
     window.removeEventListener('storage', this.onStorageChange)
+    this.$bus.$off('student-data-changed', this.onDataChanged)
   },
   methods: {
     // 其他标签页修改 studentData 时自动刷新
@@ -99,11 +102,23 @@ export default {
         this.loadData()
       }
     },
+    // 同标签页内 StudentManage 修改数据时自动刷新
+    onDataChanged() {
+      this.loadData()
+    },
     // 从 localStorage 读取学生数据（与 StudentManage 共享数据源）
     loadData() {
       const stored = localStorage.getItem('studentData')
       if (stored) {
-        try { this.studentList = JSON.parse(stored) } catch (e) { this.studentList = [] }
+        try {
+          this.studentList = JSON.parse(stored)
+          // 防御性校验：确保数据格式正确
+          if (!Array.isArray(this.studentList)) throw new Error('数据格式异常')
+        } catch (e) {
+          console.error('GradeManage: localStorage 数据损坏:', e)
+          this.studentList = []
+          this.$message.warning('本地存储数据异常，部分功能可能不可用')
+        }
       }
     },
     // 审批操作 —— 修改状态并同步写回 localStorage
@@ -119,6 +134,7 @@ export default {
           this.$set(this.studentList[idx], 'status', newStatus)
           // 同步写回 localStorage，使 StudentManage 页面数据同步
           localStorage.setItem('studentData', JSON.stringify(this.studentList))
+          this.$bus.$emit('student-data-changed')
           this.$message.success(`已${action}学生"${row.name}"的请假申请`)
         }
       }).catch(() => {})

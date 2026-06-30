@@ -298,13 +298,38 @@ export default {
   },
   mounted() {
     this.loadData()
+    // 跨标签页同步：监听其他标签页的 localStorage 变更
+    window.addEventListener('storage', this.onStorageChange)
+    // 同标签页同步：监听 EventBus 数据变更事件
+    this.$bus.$on('student-data-changed', this.onDataChanged)
+  },
+  beforeDestroy() {
+    window.removeEventListener('storage', this.onStorageChange)
+    this.$bus.$off('student-data-changed', this.onDataChanged)
   },
   methods: {
     // ---- localStorage 持久化 ----
+    onStorageChange(e) {
+      if (e.key === 'studentData') {
+        this.loadData()
+      }
+    },
+    onDataChanged() {
+      this.loadData()
+    },
+
     loadData() {
       const stored = localStorage.getItem('studentData')
       if (stored) {
-        try { this.studentList = JSON.parse(stored) } catch (e) { this.studentList = [...DEFAULT_DATA] }
+        try {
+          this.studentList = JSON.parse(stored)
+          // 防御性校验：确保数据格式正确（必须是数组）
+          if (!Array.isArray(this.studentList)) throw new Error('数据格式异常')
+        } catch (e) {
+          console.error('localStorage 数据损坏，已重置为默认数据:', e)
+          this.studentList = [...DEFAULT_DATA]
+          this.$message.warning('本地存储数据异常，已重置为默认数据')
+        }
       } else {
         this.studentList = [...DEFAULT_DATA]
         this.saveData()
@@ -312,6 +337,8 @@ export default {
     },
     saveData() {
       localStorage.setItem('studentData', JSON.stringify(this.studentList))
+      // 触发 EventBus 事件，通知同标签页内其他组件数据已变更
+      this.$bus.$emit('student-data-changed')
     },
 
     // ---- 树形节点点击筛选 ----
@@ -326,6 +353,11 @@ export default {
 
     // ---- 头像上传预览 ----
     handleAvatarChange(file) {
+      // 防御性校验：检查文件 MIME 类型是否为图片，防止绕过 accept 限制
+      if (!file.raw || !file.raw.type || !file.raw.type.startsWith('image/')) {
+        this.$message.warning('请上传图片格式的文件')
+        return
+      }
       const isLt2M = file.size / 1024 / 1024 < 2
       if (!isLt2M) {
         this.$message.warning('头像图片大小不能超过 2MB!')
@@ -357,7 +389,8 @@ export default {
     // ---- 编辑 ----
     handleEdit(row) {
       this.isEdit = true; this.editingId = row.id
-      this.form = { ...row }
+      // 深拷贝：防止后续表单修改意外污染原始数据对象
+      this.form = JSON.parse(JSON.stringify(row))
       this.dialogVisible = true
       this.$nextTick(() => { this.$refs.studentForm && this.$refs.studentForm.clearValidate() })
     },
@@ -371,8 +404,13 @@ export default {
         if (idx !== -1) {
           this.studentList.splice(idx, 1)
           this.saveData()
+          this.$bus.$emit('student-data-changed')
           this.$message.success('删除成功')
           if (this.pagedData.length === 0 && this.currentPage > 1) this.currentPage--
+          // 删除后如果列表为空，给予明确提示
+          if (this.filteredList.length === 0) {
+            this.$message.info('当前筛选条件下没有更多学生数据')
+          }
         }
       }).catch(() => {})
     },
@@ -385,17 +423,26 @@ export default {
         if (this.isEdit) {
           const idx = this.studentList.findIndex(item => item.id === this.editingId)
           if (idx !== -1) {
-            this.$set(this.studentList, idx, { ...this.form })
+            // 编辑时防御性检查：如果学号被修改（尽管 disabled 但仍可绕过），防止与其他学生冲突
+            const conflict = this.studentList.find(
+              item => item.id === this.form.id && item.id !== this.editingId
+            )
+            if (conflict) {
+              this.$message.error('该学号与其他学生冲突'); this.submitLoading = false; return
+            }
+            this.$set(this.studentList, idx, JSON.parse(JSON.stringify(this.form)))
             this.$message.success('编辑成功')
           }
         } else {
           if (this.studentList.find(item => item.id === this.form.id)) {
             this.$message.error('该学号已存在'); this.submitLoading = false; return
           }
-          this.studentList.unshift({ ...this.form })
+          this.studentList.unshift(JSON.parse(JSON.stringify(this.form)))
           this.$message.success('新增成功')
         }
         this.saveData()
+        // 触发 EventBus 事件，通知同页面其他组件（如 GradeManage）数据已变更
+        this.$bus.$emit('student-data-changed')
         this.dialogVisible = false
         this.submitLoading = false
       })
@@ -403,8 +450,8 @@ export default {
 
     // ---- 弹窗关闭重置 ----
     handleDialogClose() {
+      // resetFields 会自动将表单字段重置为初始值并清除校验状态，无需手动清空 form
       this.$refs.studentForm && this.$refs.studentForm.resetFields()
-      this.form = { id: '', name: '', gender: '', class: '', phone: '', status: '', avatar: '' }
     },
 
     // ---- 分页 ----

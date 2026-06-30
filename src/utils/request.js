@@ -47,6 +47,16 @@ service.interceptors.response.use(
         500: '服务器内部错误'
       }
       console.error(`HTTP ${status}: ${statusMessages[status] || '网络错误'}`)
+
+      // 401 未授权 —— 自动清除登录态并跳转到登录页
+      if (status === 401) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('userInfo')
+        // 避免循环跳转：仅在非登录页触发
+        if (window.location.hash !== '#/login' && window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
+      }
     } else if (error.code === 'ECONNABORTED') {
       console.error('请求超时，请检查网络连接')
     } else {

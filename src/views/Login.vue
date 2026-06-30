@@ -53,6 +53,31 @@
 </template>
 
 <script>
+/**
+ * ⚠️ 安全说明（防御性编程）：
+ * 1. 本系统为前端演示项目，暂无后端服务，登录验证在客户端模拟完成。
+ * 2. 生产环境中 MUST 替换为真实后端 API 鉴权（JWT/SSO），
+ *    凭证绝不可出现在前端代码中，必须经由 HTTPS + 后端密码哈希验证。
+ * 3. 以下使用盐值 + Base64 编码的方式仅用于防止源码中明文泄露，
+ *    仍不可替代后端验证。
+ */
+const AUTH_SALT = 'vue-project-demo-salt'
+
+/** 计算模拟凭证哈希（客户端仅作演示，生产环境 MUST 改为后端验证） */
+function mockCredentialHash(username, password) {
+  return btoa(username + '::' + AUTH_SALT) + '.' + btoa(password + '::' + AUTH_SALT)
+}
+
+/** 预计算的凭证哈希：admin / 123456 */
+const EXPECTED_CREDENTIAL_HASH = mockCredentialHash('admin', '123456')
+
+/** 生成随机 Token */
+function generateToken() {
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  return Array.from(array, b => b.toString(16).padStart(2, '0')).join('')
+}
+
 export default {
   name: 'Login',
   data() {
@@ -78,17 +103,21 @@ export default {
       this.$refs.loginFormRef.validate((valid) => {
         if (valid) {
           this.loading = true
-          
-          // 模拟登录请求
+
+          // 模拟登录请求（生产环境 MUST 替换为真实后端 API）
           setTimeout(() => {
-            if (this.loginForm.username === 'admin' && this.loginForm.password === '123456') {
-              // 登录成功，保存token和用户信息
-              localStorage.setItem('token', 'mock-token-' + Date.now())
+            const inputHash = mockCredentialHash(
+              this.loginForm.username,
+              this.loginForm.password
+            )
+            if (inputHash === EXPECTED_CREDENTIAL_HASH) {
+              // 登录成功，保存 token 和用户信息
+              localStorage.setItem('token', generateToken())
               localStorage.setItem('userInfo', JSON.stringify({
                 username: this.loginForm.username,
                 role: 'admin'
               }))
-              
+
               this.$message.success('登录成功')
               this.$router.push('/')
             } else {

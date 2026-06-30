@@ -1,0 +1,203 @@
+# ==============================================================================
+# Spring Boot CI/CD Pipeline
+# 触发条件：仅当代码推送到 main 分支时执行
+# 工作流程：
+#   1. test —— 搭建 MySQL + JDK 17 环境，执行单元测试
+#   2. build-and-push —— 测试通过后，构建并推送 Docker 镜像
+# ==============================================================================
+
+name: Spring Boot CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+# 全局环境变量（可根据项目实际修改）
+env:
+  DOCKER_IMAGE_NAME: my-springboot-app
+  DOCKER_REGISTRY: ghcr.io
+  # 以下变量根据实际用户名/组织名修改
+  # DOCKER_IMAGE_TAG: ${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+
+jobs:
+  # ============================================================================
+  # Job 1: 单元测试
+  # 搭建 MySQL + JDK 运行环境，执行 Maven 单元测试
+  # ============================================================================
+  test:
+    name: 单元测试
+    runs-on: ubuntu-latest
+
+    # MySQL 服务容器 —— 使用 GitHub Actions 的 Service Container 功能
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          # 初始化 root 密码（从 GitHub Secrets 读取，避免明文泄露）
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          # 自动创建测试用数据库
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        ports:
+          - 3306:3306
+        # 等待 MySQL 就绪的健康检查
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      # ----------------------------------------
+      # Step 1: 检出代码
+      # ----------------------------------------
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # ----------------------------------------
+      # Step 2: 搭建 JDK 17 运行环境（内置 Maven 依赖缓存）
+      # ----------------------------------------
+      - name: 搭建 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ----------------------------------------
+      # Step 3: 安装 MySQL 客户端（用于健康检查）
+      # ----------------------------------------
+      - name: 安装 MySQL 客户端
+        run: sudo apt-get update -y && sudo apt-get install -y mysql-client
+
+      # ----------------------------------------
+      # Step 4: 等待 MySQL 服务就绪
+      # ----------------------------------------
+      - name: 等待 MySQL 服务就绪
+        run: |
+          echo "等待 MySQL 服务启动..."
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p"${{ secrets.MYSQL_ROOT_PASSWORD }}" --silent 2>/dev/null; then
+              echo "MySQL 服务已就绪"
+              break
+            fi
+            echo "等待中... ($i/30)"
+            sleep 3
+          done
+
+      # ----------------------------------------
+      # Step 5: 执行单元测试（含集成测试）
+      # ----------------------------------------
+      - name: 执行单元测试
+        run: |
+          # 使用 Maven Wrapper（若无 mvnw 则改为 mvn）
+          ./mvnw clean test \
+            -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:mysql://127.0.0.1:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+        env:
+          # 数据库连接参数通过环境变量传递，避免在 pom.xml 中硬编码
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+
+      # ----------------------------------------
+      # Step 6: 生成测试报告（可选）
+      # ----------------------------------------
+      - name: 生成测试报告
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Maven 测试报告
+          path: '**/target/surefire-reports/TEST-*.xml'
+          reporter: java-junit
+          fail-on-error: true
+
+  # ============================================================================
+  # Job 2: Docker 镜像构建与推送
+  # 仅在 test Job 通过后才执行
+  # ============================================================================
+  build-and-push:
+    name: Docker 镜像构建与推送
+    runs-on: ubuntu-latest
+    needs: test  # 依赖于 test Job 成功
+
+    # 为产物设置权限：允许从 Actions 页面下载
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # ----------------------------------------
+      # Step 1: 检出代码
+      # ----------------------------------------
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # ----------------------------------------
+      # Step 2: 登录容器镜像仓库
+      # 支持 Docker Hub 和 GitHub Container Registry (ghcr.io)
+      # 使用说明：
+      #   - Docker Hub：配置 secrets.DOCKER_USERNAME 和 secrets.DOCKER_PASSWORD
+      #   - GitHub Container Registry：默认使用 GITHUB_TOKEN
+      # ----------------------------------------
+      - name: 登录 GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Steps 2 备选：登录 Docker Hub（取消注释上方并注释本段）
+      # - name: 登录 Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # ----------------------------------------
+      # Step 3: 提取 Docker 元数据（标签、注解）
+      # ----------------------------------------
+      - name: 提取 Docker 元数据
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            # 语义化标签：如 v1.2.3
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            # 分支名标签：如 main
+            type=ref,event=branch
+            # 最新提交 SHA 的短格式
+            type=sha,format=short
+            # 始终标记为 latest
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # ----------------------------------------
+      # Step 4: 构建并推送 Docker 镜像
+      # ----------------------------------------
+      - name: 构建并推送 Docker 镜像
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          # 使用 BuildKit 缓存加速重复构建
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # ----------------------------------------
+      # Step 5: 生成 Docker 镜像清单（可选，用于后续部署）
+      # ----------------------------------------
+      - name: 生成 Docker 镜像摘要
+        run: |
+          echo "## Docker 镜像构建结果" >> $GITHUB_STEP_SUMMARY
+          echo "- 镜像仓库: ${{ env.DOCKER_REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 镜像名称: ${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 标签列表:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
